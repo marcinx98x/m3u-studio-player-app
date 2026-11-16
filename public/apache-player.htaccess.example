@@ -1,0 +1,20 @@
+# Skopiuj do dist/.htaccess po buildzie (subdomena playera, Apache + mod_proxy + mod_rewrite)
+#
+# W VirtualHost zalecane ProxyPass zamiast [P] w .htaccess — patrz README.
+
+# Security headers
+Header always set Referrer-Policy "no-referrer"
+Header always set X-Frame-Options "DENY"
+Header always set X-Content-Type-Options "nosniff"
+# CSP: self + studio API / media. Dostosuj host jeśli inny.
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https: blob:; connect-src 'self' https://m3u-studio.marcincloud.org https://m3u-studio-player.marcincloud.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+RewriteEngine On
+
+# Proxy API studia (wymaga mod_proxy)
+RewriteRule ^api/(.*)$ https://m3u-studio.marcincloud.org/api/$1 [P,L]
+
+# SPA — React Router
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]

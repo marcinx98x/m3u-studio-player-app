@@ -1,0 +1,28 @@
+# IONOS shared — player SPA (bez PHP, bez ProxyPass).
+# API Xtream: absolute URL w buildzie (VITE_XTREAM_SERVER → studio). CORS na studiu.
+#
+# Nie używaj RewriteRule [P] / ProxyPass — na shared IONOS zwykle niedostępne.
+
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+  Header always set Referrer-Policy "no-referrer"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https: blob:; connect-src 'self' https://m3u-studio.marcincloud.org https://m3u-studio-player.marcincloud.org; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Istniejące pliki (assets, index.html) — bez rewrite
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # SPA fallback (React Router)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
