@@ -22,6 +22,24 @@ export class XtreamApiError extends Error {
   }
 }
 
+/** Network / abort / 5xx / 429 — keep stored player session (e.g. Ctrl+F5). */
+export function isXtreamSoftFailure(err: unknown): boolean {
+  if (err instanceof TypeError) return true;
+  if (!(err instanceof XtreamApiError)) {
+    const msg = err instanceof Error ? err.message.toLowerCase() : '';
+    return msg.includes('failed to fetch') || msg.includes('network');
+  }
+  const status = err.statusCode;
+  if (status != null && (status >= 500 || status === 429)) return true;
+  const msg = err.message.toLowerCase();
+  return (
+    msg.includes('brak połączenia') ||
+    msg.includes('failed to fetch') ||
+    msg.includes('błąd proxy') ||
+    msg.includes('network')
+  );
+}
+
 export interface XtreamCredentials {
   username: string;
   /** Opaque session from player_api — preferred for API + stream URLs */

@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  isXtreamSoftFailure,
   xtreamLogin,
   xtreamLogout,
   type XtreamCredentials,
@@ -97,7 +98,12 @@ export function PlayerSessionProvider({ children }: { children: ReactNode }) {
       const auth = await xtreamLogin(stored);
       applyAuth(stored.username, auth);
       return true;
-    } catch {
+    } catch (err) {
+      if (isXtreamSoftFailure(err)) {
+        // Keep sessionStorage — transient network / aborted fetch (Ctrl+F5)
+        setCreds(stored);
+        return true;
+      }
       persist(null);
       setUserInfo(null);
       setServerInfo(null);
@@ -110,7 +116,8 @@ export function PlayerSessionProvider({ children }: { children: ReactNode }) {
       creds,
       userInfo,
       serverInfo,
-      isAuthenticated: !!creds?.sessionToken && !!userInfo,
+      // Session token is enough for routing; userInfo may be null after soft restore
+      isAuthenticated: !!creds?.sessionToken,
       login,
       logout,
       restoreSession,
